@@ -68,38 +68,6 @@ gcc 4클라.c -o client -pthread
 
 ---
 
-## 메시지 프로토콜 (요약)
-
-### MessageType (서버·클라이언트 동일)
-- 회원 기능: `MSG_REGISTER`, `MSG_LOGIN`, `MSG_LOGOUT`
-- 채팅 기능:  
-  - 공개: `MSG_PUBLIC_CHAT`  
-  - 방: `MSG_ROOM_CHAT`  
-  - 귓속말: `MSG_PRIVATE_CHAT`
-- 방 기능:  
-  - `MSG_CREATE_ROOM`, `MSG_JOIN_ROOM`, `MSG_LEAVE_ROOM`, `MSG_DELETE_ROOM`
-- 정보 요청:  
-  - `MSG_LIST_USERS`, `MSG_LIST_ROOMS`
-- 기타:  
-  - `MSG_DUPLICATE_IP`, `MSG_USER_CHANGE`, `MSG_USER_CHANGE_SUCCESS`
-
-### Message 구조체
-```
-typedef struct {
-    MessageType type;
-    char username[50];
-    char password[50];
-    char content[256];
-    char target[50];
-    char new_username[50];
-    char new_password[50];
-    int room_id;
-    char timestamp[30];
-} Message;
-```
-
----
-
 ## 클라이언트 사용 방법
 
 - 닉네임으로 로그인 또는 회원가입
@@ -123,13 +91,3 @@ typedef struct {
 - 중복 ID, 중복 IP, 유효성 검사는 서버단에서 처리
 
 ---
-
-## 향후 개선 사항
-- 비밀번호 암호화 저장(Bcrypt 등)
-- 채팅 로그 저장 기능
-- 파일 전송 기능 확장
-- 방 인원 제한/관리 기능
-- 소켓 타임아웃 및 예외 처리 강화
-
----
-
