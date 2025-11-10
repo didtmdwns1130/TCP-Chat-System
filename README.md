@@ -1,0 +1,135 @@
+# TCP-Chat-System
+콘솔 기반 **TCP/IP 멀티스레드 채팅 시스템** (Server & Client)
+
+서버는 여러 클라이언트를 스레드로 처리하며, 회원가입·로그인, 귓속말, 방 생성/입장/퇴장, 사용자 정보 변경 등 다양한 메시지 타입을 처리합니다.  
+클라이언트는 메뉴 기반 UI를 통해 서버와 통신하며, 메시지 타입/구조체는 서버와 클라이언트가 동일하게 사용합니다.
+
+---
+
+## 주요 기능
+- TCP/IP 기반 양방향 통신
+- 다중 클라이언트 동시 처리 (pthread 기반 멀티스레드)
+- 메시지 프로토콜(열거형 + 구조체) 공통 사용
+- 회원가입 / 로그인 / 로그아웃
+- 공개 채팅 / 방 채팅 / 귓속말
+- 방 생성, 입장, 퇴장, 삭제
+- 사용자 정보 변경 (ID/비밀번호)
+- 사용자 목록 / 방 목록 요청
+- 중복 IP 차단 처리
+
+---
+
+## 기술 스택
+- **C**
+- **TCP/IP 소켓 통신**
+- **멀티스레드(pthread)**
+- **MySQL 연동(서버 DB 연결 코드 포함)**
+- **콘솔 기반 환경**
+
+---
+
+## 빌드
+
+### 서버
+```bash
+gcc 4서버.c -o server -pthread -lmysqlclient
+```
+
+### 클라이언트
+```bash
+gcc 4클라.c -o client -pthread
+```
+
+※ 이 프로젝트는 Linux/WSL 환경에서 동작하도록 작성되었습니다.  
+   (MySQL 기능을 사용하려면 MySQL 개발용 라이브러리가 추가로 필요합니다.)
+
+※ Windows에서도 사용하려면, 소스를 Visual Studio 프로젝트에 추가하여  
+   Windows용으로 빌드할 수 있습니다.(단, 리눅스 전용 헤더와 함수는 Windows 대응 코드로 수정해야 합니다.)
+
+
+---
+
+## 실행
+
+### 1) 서버 실행
+```bash
+./server
+```
+- 서버는 MySQL 연결 설정을 초기화하고 클라이언트 접속을 기다립니다.
+- 클라이언트마다 개별 스레드가 생성됩니다.
+
+### 2) 클라이언트 실행
+```bash
+./client
+```
+- 실행 시 서버 IP/포트 입력
+- 기본 포트는 8080  
+- 연결 후 메뉴가 출력되며, 로그인·회원가입·방 기능·채팅 기능을 사용할 수 있습니다.
+
+---
+
+## 메시지 프로토콜 (요약)
+
+### MessageType (서버·클라이언트 동일)
+- 회원 기능: `MSG_REGISTER`, `MSG_LOGIN`, `MSG_LOGOUT`
+- 채팅 기능:  
+  - 공개: `MSG_PUBLIC_CHAT`  
+  - 방: `MSG_ROOM_CHAT`  
+  - 귓속말: `MSG_PRIVATE_CHAT`
+- 방 기능:  
+  - `MSG_CREATE_ROOM`, `MSG_JOIN_ROOM`, `MSG_LEAVE_ROOM`, `MSG_DELETE_ROOM`
+- 정보 요청:  
+  - `MSG_LIST_USERS`, `MSG_LIST_ROOMS`
+- 기타:  
+  - `MSG_DUPLICATE_IP`, `MSG_USER_CHANGE`, `MSG_USER_CHANGE_SUCCESS`
+
+### Message 구조체
+```
+typedef struct {
+    MessageType type;
+    char username[50];
+    char password[50];
+    char content[256];
+    char target[50];
+    char new_username[50];
+    char new_password[50];
+    int room_id;
+    char timestamp[30];
+} Message;
+```
+
+---
+
+## 클라이언트 사용 방법
+
+- 닉네임으로 로그인 또는 회원가입
+- 메뉴 선택 후 다음 기능 수행:
+  - 공개 채팅
+  - 방 생성 / 방 입장 / 방 퇴장 / 방 목록 보기
+  - 사용자 목록 보기
+  - 귓속말 보내기
+  - ID/비밀번호 변경
+  - 로그아웃
+
+- 채팅 입력 시 현재 컨텍스트(공개/방)에 따라 메시지가 서버로 전송됨
+
+---
+
+## 서버 동작 개요
+- 클라이언트 접속 → 스레드 생성  
+- 각 스레드는 메시지 수신 → 메시지 타입에 따라 처리  
+- DB 관련 기능(MySQL)은 내부에서 호출  
+- 브로드캐스트/개별 발송을 모두 지원  
+- 중복 ID, 중복 IP, 유효성 검사는 서버단에서 처리
+
+---
+
+## 향후 개선 사항
+- 비밀번호 암호화 저장(Bcrypt 등)
+- 채팅 로그 저장 기능
+- 파일 전송 기능 확장
+- 방 인원 제한/관리 기능
+- 소켓 타임아웃 및 예외 처리 강화
+
+---
+
